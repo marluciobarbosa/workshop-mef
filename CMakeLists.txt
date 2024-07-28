@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.21 FATAL_ERROR)
 project(FEMSolver LANGUAGES CXX C)
 cmake_policy(SET CMP0146 NEW)
 
@@ -42,6 +42,8 @@ else()
   set(Kokkos_ENABLE_PTHREAD OFF CACHE INTERNAL "Kokkos_ENABLE_PTHREAD" FORCE)
   set(Kokkos_ENABLE_SERIAL ON CACHE INTERNAL "Kokkos_ENABLE_SERIAL" FORCE)
 endif()
+
+set(Kokkos_ENABLE_AGGRESSIVE_VECTORIZATION ON)
 
 if(USE_CUDA)
   set(Kokkos_ENABLE_CUDA ON CACHE INTERNAL "Kokkos_ENABLE_CUDA" FORCE)
