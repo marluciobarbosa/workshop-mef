@@ -23,10 +23,16 @@ jobs:
         sudo apt update
         sudo apt upgrade -y 
         sudo apt install -y libtbb-dev libeigen3-dev wget curl git cmake
+    
+    - name: Instalar NVIDIA SDK
+      run: |
         curl https://developer.download.nvidia.com/hpc-sdk/ubuntu/DEB-GPG-KEY-NVIDIA-HPC-SDK | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg
         echo 'deb [signed-by=/usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg] https://developer.download.nvidia.com/hpc-sdk/ubuntu/amd64 /' | sudo tee /etc/apt/sources.list.d/nvhpc.list
         sudo apt-get update -y
         sudo apt-get install -y nvhpc-24-7
+
+    - name: Instalar NVIDIA CUDA
+      run: |
         wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb
         sudo dpkg -i cuda-keyring_1.1-1_all.deb
         sudo apt-get update
