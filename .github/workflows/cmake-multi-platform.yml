@@ -31,13 +31,6 @@ jobs:
         sudo apt-get update -y
         sudo apt-get install -y nvhpc-24-7
 
-    - name: Instalar NVIDIA CUDA
-      run: |
-        wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb
-        sudo dpkg -i cuda-keyring_1.1-1_all.deb
-        sudo apt-get update
-        sudo apt-get -y install cuda-toolkit-12-6
-
     - name: Atualizar .bashrc
       run: |
         echo '# NVIDIA SDK' >> ~/.bashrc
@@ -67,7 +60,7 @@ jobs:
         -DCMAKE_C_COMPILER=/opt/nvidia/hpc_sdk/Linux_x86_64/24.7/compilers/bin/nvc \
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
         -DUSE_KOKKOS=ON\
-        -DUSE_CUDA=ON \
+        -DUSE_CUDA=OFF \
         -DUSE_OPENMP=ON \
         -DUSE_OPENACC=ON \
         -S ${{ github.workspace }}

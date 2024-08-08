@@ -106,3 +106,9 @@ cmake -B CAMINHO_DIRETORIO_DE_BUILD \
 Substitua `CAMINHO_DIRETORIO_DE_BUILD` e `CAMINHO_DIRETORIO_RAIZ_DO_PROJETO` de acordo com os endereços absolutos dos seus diretórios.
 
 Os binários estarão disponíveis em: `CAMINHO_DIRETORIO_DE_BUILD`/bin.
+
+# Finalidade
+
+Os códigos e instruções nesse repositório são parte de um material de apoio para  instrução formal tutelada. __Não utilize esse código em ambiente de produção sem os ajustes necessários__.
+
+O **processo de refinamento** dos códigos e suas nuances são discutidos e trabalhados em **ambiente acadêmico**.
