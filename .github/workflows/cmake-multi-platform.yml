@@ -14,13 +14,9 @@ jobs:
       fail-fast: false
       matrix:
         build_type: [Release]
-        c_compiler: [gcc, clang, nvc]
-        cpp_compiler: [g++, clang++, nvc++]
+        c_compiler: [nvc]
+        cpp_compiler: [nvc++]
         include:
-          - c_compiler: gcc
-            cpp_compiler: g++
-          - c_compiler: clang
-            cpp_compiler: clang++
           - c_compiler: nvc
             cpp_compiler: nvc++
 
@@ -35,6 +31,16 @@ jobs:
         echo 'deb [signed-by=/usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg] https://developer.download.nvidia.com/hpc-sdk/ubuntu/amd64 /' | sudo tee /etc/apt/sources.list.d/nvhpc.list
         sudo apt-get update -y
         sudo apt-get install -y nvhpc-24-7
+
+    - name: Update .bashrc
+      run: |
+        echo '# NVIDIA SDK' >> ~/.bashrc
+        echo 'NVARCH=`uname -s`_`uname -m`; export NVARCH' >> ~/.bashrc
+        echo 'NVCOMPILERS=/opt/nvidia/hpc_sdk; export NVCOMPILERS' >> ~/.bashrc
+        echo 'MANPATH=$MANPATH:$NVCOMPILERS/$NVARCH/24.7/compilers/man; export MANPATH' >> ~/.bashrc
+        echo 'PATH=$NVCOMPILERS/$NVARCH/24.7/compilers/bin:$PATH; export PATH' >> ~/.bashrc
+        echo 'export PATH=$NVCOMPILERS/$NVARCH/24.7/comm_libs/mpi/bin:$PATH #MPI' >> ~/.bashrc
+        echo 'export MANPATH=$MANPATH:$NVCOMPILERS/$NVARCH/24.7/comm_libs/mpi/man #MPI' >> ~/.bashrc
 
     - name: Set reusable strings
       id: strings
