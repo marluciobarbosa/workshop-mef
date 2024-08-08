@@ -50,6 +50,7 @@ jobs:
         -DCMAKE_CXX_COMPILER=/opt/nvidia/hpc_sdk/Linux_x86_64/24.7/compilers/bin/nvc++ \
         -DCMAKE_C_COMPILER=/opt/nvidia/hpc_sdk/Linux_x86_64/24.7/compilers/bin/nvc \
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+        -DUSE_CUDA=OFF \
         -S ${{ github.workspace }}
 
     - name: Build
