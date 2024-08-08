@@ -159,3 +159,10 @@ Temporary Items
 build/
 libs/
 src/1D/
+
+# Resultados
+resultados*.txt
+
+# Testes
+teste
+teste.exe

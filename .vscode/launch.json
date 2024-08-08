@@ -1,0 +1,34 @@
+{
+    // Use o IntelliSense para saber mais sobre os atributos possíveis.
+    // Focalizar para exibir as descrições dos atributos existentes.
+    // Para obter mais informações, acesse: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "(gdb) Launch",
+            "type": "cppdbg", // Linux
+            // "type": "lldb", // MacOS
+            "request": "launch",
+            "program": "${command:cmake.launchTargetPath}",
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            // "processId": "${command:pickProcess}",
+            // "MIMode": "gdb",
+            "setupCommands": [{
+                "description": "Enable pretty-printing for gdb",
+                "text": "-enable-pretty-printing",
+                "debuggerPath": "/usr/local/cuda/bin/cuda-gdb",
+                // "debuggerPath": "/usr/bin/gdb",
+                "ignoreFailures": true
+            }],
+            // "miDebuggerPath": "/usr/local/cuda/bin/cuda-gdb",
+            // "miDebuggerPath": "/usr/bin/gdb",
+            // "miDebuggerPath": "/usr/bin/lldb",
+
+            "args": ["50", "50"]
+           
+        }
+    ]
+}
