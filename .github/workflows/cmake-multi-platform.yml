@@ -18,16 +18,21 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install Dependencies
+    - name: Instalar dependências
       run: |
         sudo apt update
-        sudo apt install -y libtbb-dev
+        sudo apt upgrade -y 
+        sudo apt install -y libtbb-dev libeigen3-dev wget curl git cmake
         curl https://developer.download.nvidia.com/hpc-sdk/ubuntu/DEB-GPG-KEY-NVIDIA-HPC-SDK | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg
         echo 'deb [signed-by=/usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg] https://developer.download.nvidia.com/hpc-sdk/ubuntu/amd64 /' | sudo tee /etc/apt/sources.list.d/nvhpc.list
         sudo apt-get update -y
         sudo apt-get install -y nvhpc-24-7
+        wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb
+        sudo dpkg -i cuda-keyring_1.1-1_all.deb
+        sudo apt-get update
+        sudo apt-get -y install cuda-toolkit-12-6
 
-    - name: Update .bashrc
+    - name: Atualizar .bashrc
       run: |
         echo '# NVIDIA SDK' >> ~/.bashrc
         echo 'NVARCH=`uname -s`_`uname -m`; export NVARCH' >> ~/.bashrc
@@ -36,26 +41,34 @@ jobs:
         echo 'PATH=$NVCOMPILERS/$NVARCH/24.7/compilers/bin:$PATH; export PATH' >> ~/.bashrc
         echo 'export PATH=$NVCOMPILERS/$NVARCH/24.7/comm_libs/mpi/bin:$PATH #MPI' >> ~/.bashrc
         echo 'export MANPATH=$MANPATH:$NVCOMPILERS/$NVARCH/24.7/comm_libs/mpi/man #MPI' >> ~/.bashrc
+        echo '' >> ~/.bashrc
+        echo '# NVIDIA CUDA' >> ~/.bashrc
+        echo 'export PATH=/usr/local/cuda-12.6/bin${PATH:+:${PATH}}' >> ~/.bashrc
+        echo 'export LD_LIBRARY_PATH=/usr/local/cuda-12.6/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}' >> ~/.bashrc
         source ~/.bashrc
 
-    - name: Set reusable strings
+    - name: Definir cadeias de caracteres reutilizáveis
       id: strings
       shell: bash
       run: |
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
-    - name: Configure CMake
+    - name: Configurar o CMake
       run: |
+        source ~/.bashrc
         cmake -B ${{ steps.strings.outputs.build-output-dir }} \
         -DCMAKE_CXX_COMPILER=/opt/nvidia/hpc_sdk/Linux_x86_64/24.7/compilers/bin/nvc++ \
         -DCMAKE_C_COMPILER=/opt/nvidia/hpc_sdk/Linux_x86_64/24.7/compilers/bin/nvc \
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-        -DUSE_CUDA=OFF \
+        -DUSE_KOKKOS=ON\
+        -DUSE_CUDA=ON \
+        -DUSE_OPENMP=ON \
+        -DUSE_OPENACC=ON \
         -S ${{ github.workspace }}
 
-    - name: Build
+    - name: Compilar
       run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
 
-    - name: Test
+    - name: Testar
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
       run: ctest --build-config ${{ matrix.build_type }}
