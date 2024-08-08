@@ -36,5 +36,5 @@ Esta equação, com estas condições de contorno, descreve um problema de valor
 Um possível solução analítica  é  dada por:
 
 ```math
-u(x,y) = \operatorname{sen}(\pi*x) * \operatorname{sen}(\pi*y))
+u(x,y) = sen(\pi*x) * sen(\pi*y))
 ```
