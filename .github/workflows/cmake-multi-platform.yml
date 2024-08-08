@@ -14,11 +14,6 @@ jobs:
       fail-fast: false
       matrix:
         build_type: [Release]
-        c_compiler: [nvc]
-        cpp_compiler: [nvc++]
-        include:
-          - c_compiler: nvc
-            cpp_compiler: nvc++
 
     steps:
     - uses: actions/checkout@v4
@@ -41,6 +36,7 @@ jobs:
         echo 'PATH=$NVCOMPILERS/$NVARCH/24.7/compilers/bin:$PATH; export PATH' >> ~/.bashrc
         echo 'export PATH=$NVCOMPILERS/$NVARCH/24.7/comm_libs/mpi/bin:$PATH #MPI' >> ~/.bashrc
         echo 'export MANPATH=$MANPATH:$NVCOMPILERS/$NVARCH/24.7/comm_libs/mpi/man #MPI' >> ~/.bashrc
+        source ~/.bashrc
 
     - name: Set reusable strings
       id: strings
@@ -51,8 +47,8 @@ jobs:
     - name: Configure CMake
       run: |
         cmake -B ${{ steps.strings.outputs.build-output-dir }} \
-        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
-        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
+        -DCMAKE_CXX_COMPILER=/opt/nvidia/hpc_sdk/Linux_x86_64/24.7/compilers/bin/nvc++ \
+        -DCMAKE_C_COMPILER=/opt/nvidia/hpc_sdk/Linux_x86_64/24.7/compilers/bin/nvc \
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
         -S ${{ github.workspace }}
 
