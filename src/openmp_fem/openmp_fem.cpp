@@ -75,7 +75,7 @@ void FEMSolver2D::construir_malha() {
 
 void FEMSolver2D::construir_matriz_e_vetor() {
   // Funções de forma lineares para elementos triangulares
-  auto N = [](double xi, double eta) {
+  auto forma = [](double xi, double eta) {
     return std::vector<double>{1 - xi - eta, xi, eta}; // Funções de forma para o triângulo.
   };
   // Derivadas das funções de forma lineares
@@ -117,7 +117,7 @@ void FEMSolver2D::construir_matriz_e_vetor() {
       }
     }
 
-    std::vector<double> N_e = N(pontoDeGauss[0], pontoDeGauss[1]); // Calcula as funções de forma no ponto de Gauss.
+    std::vector<double> N_e = forma(pontoDeGauss[0], pontoDeGauss[1]); // Calcula as funções de forma no ponto de Gauss.
 
     std::vector<std::vector<double>> K_e(3, std::vector<double>(3, 0.0)); // Matriz de rigidez local do elemento.
     std::vector<double> F_e(3, 0.0); // Vetor de forças local do elemento.

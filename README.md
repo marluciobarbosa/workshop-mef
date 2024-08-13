@@ -12,7 +12,7 @@ onde:
 
 $u(x,y)$ é a função desconhecida que estamos resolvendo
 $\nabla^2 = \frac{\partial^2}{\partial x^2} + \frac{\partial^2}{\partial y^2}$ é o operador Laplaciano
-$f(x,y)$ é a função de fonte (no nosso caso, $f(x,y) =  2 * \pi^2 * \operatorname{sen}(\pi * x) * \operatorname{sen}(\pi * y)$)
+$f(x,y)$ é a função de fonte (no nosso caso, $f(x,y) =  2 * \pi^2 * sen(\pi * x) * sen(\pi * y)$)
 
 **Condições de contorno de Dirichlet:**
 

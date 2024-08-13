@@ -89,8 +89,7 @@ void FEMSolver2D::construir_matriz_e_vetor() {
   // Uso de std::for_each com execução paralela
   std::for_each(std::execution::par, elementos.begin(), elementos.end(),
                 [&](const std::vector<int> &elemento) { // Para cada elemento da malha.
-                  int idx = &elemento - &elementos[0]; // Calcula o índice do elemento.
-
+                
                   std::vector<std::vector<double>> coords_e(3,
                                                            std::vector<double>(
                                                                2, 0.0)); // Array para armazenar as coordenadas dos nós do elemento atual.
@@ -127,15 +126,15 @@ void FEMSolver2D::construir_matriz_e_vetor() {
                   std::vector<double> N_e =
                       forma(pontoDeGauss[0], pontoDeGauss[1]); // Calcula as funções de forma no ponto de Gauss.
 
-                  std::vector<std::vector<double>> K_local(3,
+                  std::vector<std::vector<double>> K_e(3,
                                                            std::vector<double>(
                                                                3, 0.0)); // Matriz de rigidez local do elemento.
-                  std::vector<double> F_local(3, 0.0); // Vetor de forças local do elemento.
+                  std::vector<double> F_e(3, 0.0); // Vetor de forças local do elemento.
 
                   for (int i = 0; i < 3; ++i) {
                     for (int j = 0; j < 3; ++j) {
                       for (int k = 0; k < 2; ++k) {
-                        K_local[i][j] += dN_dxy[k][i] * dN_dxy[k][j] * detJ *
+                        K_e[i][j] += dN_dxy[k][i] * dN_dxy[k][j] * detJ *
                                          pesoDeGauss; // Cálculo da matriz de rigidez local usando integração numérica.
                       }
                     }
@@ -147,15 +146,15 @@ void FEMSolver2D::construir_matriz_e_vetor() {
                       x += N_e[j] * coords_e[j][0]; // Calcula a coordenada x do ponto de integração.
                       y += N_e[j] * coords_e[j][1]; // Calcula a coordenada y do ponto de integração.
                     }
-                    F_local[i] = N_e[i] * fonte(x, y) * detJ * pesoDeGauss; // Cálculo do vetor de forças local.
+                    F_e[i] = N_e[i] * fonte(x, y) * detJ * pesoDeGauss; // Cálculo do vetor de forças local.
                   }
 
                   for (int i = 0; i < 3; ++i) {
-                    f_atomic[elemento[i]] += F_local[i]; // Atualiza o vetor de forças global usando operação atômica.
+                    f_atomic[elemento[i]] += F_e[i]; // Atualiza o vetor de forças global usando operação atômica.
                     for (int j = 0; j < 3; ++j) {
                       std::lock_guard<std::mutex> lock(
                           K_mutexes[elemento[i]]); // Utiliza mutex para garantir exclusividade de acesso à matriz de rigidez.
-                      K[elemento[i]][elemento[j]] += K_local[i][j]; // Atualiza a matriz de rigidez global.
+                      K[elemento[i]][elemento[j]] += K_e[i][j]; // Atualiza a matriz de rigidez global.
                     }
                   }
                 });

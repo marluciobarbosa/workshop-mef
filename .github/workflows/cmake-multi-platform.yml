@@ -21,7 +21,6 @@ jobs:
     - name: Instalar dependências
       run: |
         sudo apt update
-        sudo apt upgrade -y 
         sudo apt install -y libtbb-dev libeigen3-dev wget curl git cmake
     
     - name: Instalar NVIDIA SDK
@@ -41,9 +40,6 @@ jobs:
         echo 'export PATH=$NVCOMPILERS/$NVARCH/24.7/comm_libs/mpi/bin:$PATH #MPI' >> ~/.bashrc
         echo 'export MANPATH=$MANPATH:$NVCOMPILERS/$NVARCH/24.7/comm_libs/mpi/man #MPI' >> ~/.bashrc
         echo '' >> ~/.bashrc
-        echo '# NVIDIA CUDA' >> ~/.bashrc
-        echo 'export PATH=/usr/local/cuda-12.6/bin${PATH:+:${PATH}}' >> ~/.bashrc
-        echo 'export LD_LIBRARY_PATH=/usr/local/cuda-12.6/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}' >> ~/.bashrc
         source ~/.bashrc
 
     - name: Definir cadeias de caracteres reutilizáveis
@@ -63,11 +59,16 @@ jobs:
         -DUSE_CUDA=OFF \
         -DUSE_OPENMP=ON \
         -DUSE_OPENACC=ON \
+        -DUSE_OPENACC_GPU=OFF \
         -S ${{ github.workspace }}
 
     - name: Compilar
-      run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
+      run: |
+        source ~/.bashrc
+        cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
 
     - name: Testar
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
-      run: ctest --build-config ${{ matrix.build_type }}
+      run: |
+        source ~/.bashrc
+        ctest --build-config ${{ matrix.build_type }}

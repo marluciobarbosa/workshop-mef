@@ -21,6 +21,7 @@ public:
     void imprimir_resultados() const; // Método para imprimir os resultados na saída padrão.
     void salvar_resultados(const std::string &filename) const; // Método para salvar os resultados em um arquivo.
 
+// private: (o correto seria escrever métodos getters e setters, mas hoje estou com preguiça)
     int nx, ny; // Número de nós na direção x e y.
     int N;      // Total de nós na malha (nx * ny).
     double* K;  // Ponteiro para matriz de rigidez.
@@ -88,21 +89,21 @@ void FEMSolver2D::construir_malha() {
     }
 }
 
+// Função auxiliar para substituir a lambda
+#pragma acc routine seq // Define que a função deve ser executada de forma sequencial na GPU.
+void forma(double xi, double eta, double* result) {
+    result[0] = 1 - xi - eta; // Função de forma do elemento triangular.
+    result[1] = xi;
+    result[2] = eta;
+}
+
 void FEMSolver2D::construir_matriz_e_vetor() {
-    // Certifique-se de que todos os dados necessários estão copiados para a GPU
-    #pragma acc enter data copyin(this, this->nx, this->ny, this->N, this->K[:N*N], this->f[:N], this->elementos[:6*nx*ny], this->nos[:2*N])
-    // Funções de forma lineares para elementos triangulares
-    auto forma = [](double xi, double eta, double* N) {
-        // Funções de forma para o triângulo.
-        N[0] = 1 - xi - eta;
-        N[1] = xi;
-        N[2] = eta;
-    };
-    const double dN_dxi[2][3] = {{-1, 1, 0}, {-1, 0, 1}}; // Derivadas das funções de forma nas coordenadas locais.
-    const double pontoDeGauss[2] = {1.0 / 3, 1.0 / 3}; // Ponto de Gauss no centro do triângulo.
-    const double pesoDeGauss = 1.0 / 2.0; // Peso associado ao ponto de Gauss.
-    
-    #pragma acc parallel loop present(this, this->nx, this->ny, this->N, this->K[:N*N], this->f[:N], this->elementos[:6*nx*ny], this->nos[:2*N])
+    double dN_dxi[2][3] = {{-1, 1, 0}, {-1, 0, 1}}; // Derivadas das funções de forma nas coordenadas locais.
+    double pontoDeGauss[2] = {1.0 / 3, 1.0 / 3}; // Ponto de Gauss no centro do triângulo.
+    double pesoDeGauss = 1.0 / 2.0; // Peso associado ao ponto de Gauss.
+
+    // Diretriz OpenACC para paralelizar o loop
+    #pragma acc parallel loop present(K[:N*N], f[:N], elementos[:6*nx*ny], nos[:2*N])
     for (int e = 0; e < 2 * nx * ny; ++e) { // Itera sobre cada elemento.
         double coords_e[3][2]; // Array para armazenar as coordenadas dos nós do elemento atual.
         double J[2][2] = {{0}}; // Matriz Jacobiana do elemento.
@@ -142,8 +143,8 @@ void FEMSolver2D::construir_matriz_e_vetor() {
             }
         }
 
-        double N_e[3];
-        forma(pontoDeGauss[0], pontoDeGauss[1], N_e); // Funções de forma no ponto de Gauss.
+        double N_e[3]; // Array para armazenar os valores das funções de forma no ponto de Gauss.
+        forma(pontoDeGauss[0], pontoDeGauss[1], N_e); // Calcula as funções de forma no ponto de Gauss.
 
         // Calcular K_e
         for (int i = 0; i < 3; ++i) {
@@ -176,10 +177,6 @@ void FEMSolver2D::construir_matriz_e_vetor() {
             }
         }
     }
-
-    // Certifique-se de que os dados atualizados sejam copiados de volta para o host
-    #pragma acc exit data copyout(this->K[:N*N], this->f[:N])
-
 }
 
 void FEMSolver2D::aplicar_condicoes_contorno() {
@@ -261,14 +258,30 @@ int main(int argc, char *argv[]) {
     int ny = argc > 2 ? atoi(argv[2]) : 100; // Número de nós na direção y, por padrão 100.
     FEMSolver2D solver(nx, ny); // Cria um objeto solver com o número de nós especificado.
 
-    auto start = std::chrono::high_resolution_clock::now(); // Marca o tempo inicial para a construção da matriz e vetor.
-    solver.construir_matriz_e_vetor(); // Chama o método para construir a matriz de rigidez e vetor de forças.
+    int N = solver.N;
+    int n_elementos = 6 * solver.nx * solver.ny; // Número total de elementos.
     
+    double* K = solver.K; // Ponteiro para matriz de rigidez.
+    double* f = solver.f; // Ponteiro para vetor de cargas.
+    double* u = solver.u; // Ponteiro para vetor solução.
+    int* elementos = solver.elementos; // Ponteiro para armazenar os elementos.
+    double* nos = solver.nos; // Ponteiro para armazenar as coordenadas dos nós.
+
+    auto start = std::chrono::high_resolution_clock::now(); // Marca o tempo inicial para a construção da matriz e vetor.
+    // Certifique-se de que todos os dados necessários estão copiados para a GPU
+    #pragma acc enter data copyin(K[:N*N], f[:N], u[:N], elementos[:n_elementos], nos[:2*N]) // Copia os dados para a GPU.
+    
+    // Acesse ponteiros na GPU
+    #pragma acc host_data use_device(K, f, elementos, nos) // Assegura que os ponteiros são acessados na GPU.
+    {
+        solver.construir_matriz_e_vetor(); // Chama o método para construir a matriz de rigidez e vetor de forças.
+    }
     auto end = std::chrono::high_resolution_clock::now(); // Marca o tempo final.
     std::chrono::duration<double, std::milli> diff = end - start; // Calcula a duração em milissegundos.
     std::cout << "\033[0;31mTempo para construir matriz e vetor: " << std::scientific << diff.count() << " ms\033[0m\n"; // Imprime o tempo gasto.
     
     start = std::chrono::high_resolution_clock::now(); // Marca o tempo inicial para a aplicação das condições de contorno.
+    #pragma acc update host(K[:N*N], f[:N]) // Atualiza os dados da GPU para a CPU.
     solver.aplicar_condicoes_contorno(); // Chama o método para aplicar as condições de contorno.
     end = std::chrono::high_resolution_clock::now(); // Marca o tempo final.
     diff = end - start; // Calcula a duração em milissegundos.
@@ -276,7 +289,10 @@ int main(int argc, char *argv[]) {
               << diff.count() << " ms\n"; // Imprime o tempo gasto.
 
     start = std::chrono::high_resolution_clock::now(); // Marca o tempo inicial para resolver o sistema.
+    #pragma acc update device(K[:N*N], f[:N]) // Atualiza os dados da CPU para a GPU.
     solver.resolver(); // Chama o método para resolver o sistema linear.
+    #pragma acc update host(u[:N]) // Atualiza os dados da GPU para a CPU.
+    #pragma acc exit data delete(K[:N*N], f[:N], u[:N], elementos[:n_elementos], nos[:2*N]) // Remove os dados da GPU.
 
     end = std::chrono::high_resolution_clock::now(); // Marca o tempo final.
     diff = end - start; // Calcula a duração em milissegundos.

@@ -14,7 +14,7 @@ file(MAKE_DIRECTORY "${EXTERNAL_LIBS_LOCATION}")
 
 # Opções de Build
 option(USE_KOKKOS "Usar Kokkos" ON)
-option(USE_CUDA "Usar CUDA" ON)
+option(USE_CUDA "Usar CUDA" OFF)
 option(USE_OPENMP "Usar OpenMP" ON)
 option(USE_OPENACC "Usar OpenACC" ON)
 option(USE_OPENACC_GPU "Usar OpenACC" OFF)
