@@ -21,7 +21,7 @@ jobs:
     - name: Instalar dependências
       run: |
         sudo apt update
-        sudo apt install -y libtbb-dev libeigen3-dev wget curl git cmake
+        sudo apt install -y libtbb-dev libeigen3-dev wget curl git cmake ninja-build
     
     - name: Instalar NVIDIA SDK
       run: |
@@ -51,10 +51,12 @@ jobs:
     - name: Configurar o CMake
       run: |
         source ~/.bashrc
+        export CMAKE_GENERATOR=Ninja
         cmake -B ${{ steps.strings.outputs.build-output-dir }} \
         -DCMAKE_CXX_COMPILER=/opt/nvidia/hpc_sdk/Linux_x86_64/24.7/compilers/bin/nvc++ \
         -DCMAKE_C_COMPILER=/opt/nvidia/hpc_sdk/Linux_x86_64/24.7/compilers/bin/nvc \
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+        -DCMAKE_CXX_FLAGS="-w" \
         -DUSE_KOKKOS=ON\
         -DUSE_CUDA=OFF \
         -DUSE_OPENMP=ON \
